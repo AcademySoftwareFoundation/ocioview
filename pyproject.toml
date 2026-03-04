@@ -2,7 +2,7 @@
 name = "ocioview"
 version = "0.1.0"
 description = "OpenColorIO config visual editor application"
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.11,<3.14"
 authors = [
     { name = "Contributors to the OpenColorIO Project" }
 ]
@@ -25,7 +25,7 @@ classifiers = [
 dependencies = [
     "colour-science>=0.4.5,<0.5",
     "colour-visuals",
-    "imageio>=2,< 3",
+    "openimageio>=3,<4",
     "networkx>=3,<4",
     "numpy>=1.24,<3",
     "opencolorio>=2,<3",

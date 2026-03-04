@@ -50,8 +50,6 @@ class StringListWidget(BaseItemView):
             added.
         """
         list_view = QtWidgets.QListWidget()
-        list_view.itemChanged.connect(lambda i: self.items_changed.emit())
-        list_view.currentRowChanged.connect(self.current_row_changed.emit)
 
         super().__init__(
             list_view,
@@ -61,6 +59,9 @@ class StringListWidget(BaseItemView):
             presets_only=presets_only,
             parent=parent,
         )
+
+        list_view.itemChanged.connect(lambda i: self.items_changed.emit())
+        list_view.currentRowChanged.connect(self.current_row_changed.emit)
 
         self._item_basename = item_basename or ""
         self._allow_empty = allow_empty
@@ -241,14 +242,11 @@ class ItemModelListWidget(BaseItemView):
             this being False.
         """
         self._model = model
-        self._model.dataChanged.connect(self._on_model_data_changed)
         self._model_column = model_column
 
         list_view = ListView()
         list_view.setModel(self._model)
         list_view.setModelColumn(self._model_column)
-        list_view.current_row_changed.connect(self.current_row_changed.emit)
-        list_view.doubleClicked.connect(self.item_double_clicked.emit)
 
         has_presets = self._model.has_presets()
 
@@ -261,6 +259,10 @@ class ItemModelListWidget(BaseItemView):
             presets_only=self._model.requires_presets(),
             parent=parent,
         )
+
+        self._model.dataChanged.connect(self._on_model_data_changed)
+        list_view.current_row_changed.connect(self.current_row_changed.emit)
+        list_view.doubleClicked.connect(self.item_double_clicked.emit)
 
     def clear(self) -> None:
         row_count = self._model.rowCount()

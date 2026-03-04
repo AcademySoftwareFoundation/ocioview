@@ -170,6 +170,10 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         self.makeCurrent()
 
+        # Drain any stale GL errors left by PySide6 context initialization
+        while GL.glGetError() != GL.GL_NO_ERROR:
+            pass
+
         # Init image texture
         self._image_tex = GL.glGenTextures(1)
         GL.glActiveTexture(GL.GL_TEXTURE0)
