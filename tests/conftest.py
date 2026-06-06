@@ -98,13 +98,3 @@ def reset_global_state(qapp):
 def raw_config(ocio):
     """The current raw config established by ``reset_global_state``."""
     return ocio.GetCurrentConfig()
-
-
-@pytest.fixture
-def make_model(qapp):
-    """Factory: instantiate a config item model against the current config."""
-
-    def _make(model_cls):
-        return model_cls()
-
-    return _make
