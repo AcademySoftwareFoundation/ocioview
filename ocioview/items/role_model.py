@@ -2,12 +2,13 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Type
 
 import PyOpenColorIO as ocio
-from PySide6 import QtCore
+from PySide6 import QtCore, QtGui
 
 from ..config_cache import ConfigCache
+from ..undo import ConfigSnapshotUndoCommand
 from .config_item_model import ColumnDesc, BaseConfigItemModel
 
 
@@ -46,6 +47,18 @@ class RoleModel(BaseConfigItemModel):
 
     def get_item_names(self) -> list[str]:
         return [item.name for item in self._get_items()]
+
+    def _get_undo_command_type(
+        self, column_desc: ColumnDesc
+    ) -> Type[QtGui.QUndoCommand]:
+        # Renaming a role re-sorts the config's roles, moving the item's row
+        # without a corresponding row-move signal. That invalidates the
+        # persistent index an ItemModelUndoCommand relies on, so undo would
+        # operate on the wrong role. Capture the rename as a config snapshot,
+        # which restores by serialized state and is immune to row reordering.
+        if column_desc == self.NAME:
+            return ConfigSnapshotUndoCommand
+        return super()._get_undo_command_type(column_desc)
 
     def _reset_cache(self) -> None:
         self._items = []

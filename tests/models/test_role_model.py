@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
-import pytest
 import PyOpenColorIO as ocio
 
 from ocioview.items.role_model import RoleModel
@@ -36,15 +35,7 @@ def test_rename_via_set_data():
     assert "foo" not in _role_names()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "RoleModel rename+undo corrupts roles: OCIO serializes roles sorted, "
-        "but ItemModelUndoCommand replays on a stale QPersistentModelIndex "
-        "because _set_value emits no row-move signal on the sort reorder."
-    ),
-)
-def test_rename_undo_restores():
+def test_rename_undo_redo_restores():
     model = RoleModel()
     model.create_item("foo")
     before = ocio.GetCurrentConfig().serialize()
@@ -52,9 +43,15 @@ def test_rename_undo_restores():
     index = model.get_index_from_item_name("foo")
     name_index = index.sibling(index.row(), model.NAME.column)
     model.setData(name_index, "bar")
+    after = ocio.GetCurrentConfig().serialize()
 
     undo_stack.undo()
     assert ocio.GetCurrentConfig().serialize() == before
+    assert "foo" in _role_names()
+
+    undo_stack.redo()
+    assert ocio.GetCurrentConfig().serialize() == after
+    assert "bar" in _role_names()
 
 
 def test_edit_color_space_and_undo_restores():
