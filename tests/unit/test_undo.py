@@ -7,9 +7,8 @@ from ocioview.undo import ConfigSnapshotUndoCommand, undo_stack
 
 
 def test_snapshot_command_undo_redo_round_trip():
-    config = ocio.GetCurrentConfig()
-    before = config.serialize()
-    assert config.getColorSpace("snap_cs") is None
+    before = ocio.GetCurrentConfig().serialize()
+    assert ocio.GetCurrentConfig().getColorSpace("snap_cs") is None
 
     with ConfigSnapshotUndoCommand("Add snap_cs"):
         ocio.GetCurrentConfig().addColorSpace(

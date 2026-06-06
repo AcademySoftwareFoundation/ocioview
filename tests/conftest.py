@@ -63,12 +63,19 @@ def reset_global_state(qapp):
     """
     import PyOpenColorIO as ocio
 
+    from ocioview.config_cache import ConfigCache
     from ocioview.undo import undo_stack
     from ocioview.transform_manager import TransformManager
     from ocioview.ref_space_manager import ReferenceSpaceManager
 
     # Undo stack
     undo_stack.clear()
+
+    # Config query cache reset callbacks. Models register a bound
+    # ``_reset_cache`` callback on construction; without clearing, callbacks
+    # from prior tests' (now dead) models accumulate and fire on every cache
+    # validation.
+    ConfigCache._callbacks.clear()
 
     # Transform subscriptions + subscribers
     TransformManager.reset()
