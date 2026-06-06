@@ -7,9 +7,14 @@ from ocioview.items.color_space_model import ColorSpaceModel
 from ocioview.undo import undo_stack
 
 
+# NOTE: Always access the config via ``ocio.GetCurrentConfig()`` rather than
+#       caching the reference. Undo/redo restores state by calling
+#       ``ocio.SetCurrentConfig()``, which swaps in a new config object, so a
+#       cached reference goes stale after any undo.
+
+
 def test_create_item_adds_color_space_and_undo_restores():
-    config = ocio.GetCurrentConfig()
-    before = config.serialize()
+    before = ocio.GetCurrentConfig().serialize()
 
     model = ColorSpaceModel()
     model.create_item("foo")
@@ -21,10 +26,9 @@ def test_create_item_adds_color_space_and_undo_restores():
 
 
 def test_rename_via_set_data_and_undo_restores():
-    config = ocio.GetCurrentConfig()
     model = ColorSpaceModel()
     model.create_item("foo")
-    before = config.serialize()
+    before = ocio.GetCurrentConfig().serialize()
 
     index = model.get_index_from_item_name("foo")
     name_index = index.sibling(index.row(), model.NAME.column)
@@ -40,7 +44,6 @@ def test_rename_via_set_data_and_undo_restores():
 
 
 def test_remove_unused_color_space():
-    config = ocio.GetCurrentConfig()
     model = ColorSpaceModel()
     model.create_item("foo")
 
@@ -51,7 +54,6 @@ def test_remove_unused_color_space():
 
 
 def test_removal_guard_refuses_referenced_color_space():
-    config = ocio.GetCurrentConfig()
     model = ColorSpaceModel()
     model.create_item("foo")
     ocio.GetCurrentConfig().setRole("my_role", "foo")
