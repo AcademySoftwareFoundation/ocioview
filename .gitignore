@@ -1,3 +1,7 @@
 __pycache__/
 
 uv.lock
+
+# Test/coverage artifacts
+.coverage
+.pytest_cache/
