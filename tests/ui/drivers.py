@@ -32,25 +32,42 @@ def get_widget_value(widget):
     )
 
 
+def _item_view(panel):
+    """
+    Return a panel's item view (the shared ``BaseItemView`` list or table),
+    or ``None`` for singleton panels with no item view.
+    """
+    return getattr(panel, "list", None) or getattr(panel, "table", None)
+
+
 class PanelDriver:
     """
-    Drives a ``BaseConfigItemEdit`` panel by intent. Editors are located by
-    model column through the panel's data-widget mapper, keeping tests off
-    volatile widget attribute paths.
+    Drives a config item edit panel by intent. The item view (list or table)
+    and its add/remove buttons come from the shared ``BaseItemView``; field
+    editors are located by model column through the panel's data-widget mapper.
+    Tests therefore stay off volatile widget attribute paths.
     """
 
     def __init__(self, panel):
         self.panel = panel
+        self.view = _item_view(panel)
 
-    def add(self) -> None:
-        self.panel.list.add_button.click()
-
-    def remove(self) -> None:
-        self.panel.list.remove_button.click()
+    def add(self, preset=None) -> None:
+        """
+        Add an item. With no preset, clicks the add button (exercising its
+        wiring). With a preset name, adds that preset (preset-only panels,
+        whose add button opens a menu instead of adding directly).
+        """
+        if preset is not None:
+            self.view.add_item(preset)
+        else:
+            self.view.add_button.click()
 
     def select(self, item_name: str) -> None:
-        index = self.panel.model.get_index_from_item_name(item_name)
-        self.panel.list.set_current_row(index.row())
+        self.view.set_current_item(item_name)
+
+    def remove(self) -> None:
+        self.view.remove_button.click()
 
     def set_field(self, column_desc, value) -> None:
         widget = self.panel.mapper.mappedWidgetAt(column_desc.column)
