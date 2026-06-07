@@ -15,6 +15,9 @@ def set_widget_value(widget, value) -> None:
     """Set a mapped editor widget's value via the shared custom-widget API."""
     if hasattr(widget, "set_value"):
         widget.set_value(value)
+    elif hasattr(widget, "set_items"):
+        # List widgets (e.g. StringListWidget) for list-valued columns.
+        widget.set_items(value)
     else:
         raise NotImplementedError(
             f"set_widget_value: no value setter for {type(widget).__name__}; "
@@ -26,6 +29,8 @@ def get_widget_value(widget):
     """Read a mapped editor widget's value via the shared custom-widget API."""
     if hasattr(widget, "value"):
         return widget.value()
+    if hasattr(widget, "items"):
+        return widget.items()
     raise NotImplementedError(
         f"get_widget_value: no value getter for {type(widget).__name__}; "
         f"extend this adapter."
