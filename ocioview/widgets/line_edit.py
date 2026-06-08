@@ -119,13 +119,13 @@ class PathEdit(LineEdit):
         elif self._file_mode == QtWidgets.QFileDialog.DirectoryOnly:
             kwargs["options"] = QtWidgets.QFileDialog.ShowDirsOnly
 
-        # Browse...
+        # Browse... (the file dialogs return a (path, selected_filter) tuple).
         if self._file_mode == QtWidgets.QFileDialog.AnyFile:
-            path_str = QtWidgets.QFileDialog.getSaveFileName(
+            path_str, _ = QtWidgets.QFileDialog.getSaveFileName(
                 self, caption="Save As File", **kwargs
             )
         elif self._file_mode == QtWidgets.QFileDialog.ExistingFile:
-            path_str = QtWidgets.QFileDialog.getOpenFileName(
+            path_str, _ = QtWidgets.QFileDialog.getOpenFileName(
                 self, caption="Choose File", **kwargs
             )
         else:
