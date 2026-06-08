@@ -4,6 +4,7 @@
 import PyOpenColorIO as ocio
 
 from ocioview.items.shared_view_model import SharedViewModel
+from ocioview.items.utils import ViewType
 from ocioview.undo import undo_stack
 
 
@@ -62,3 +63,10 @@ def test_remove_shared_view():
     model.removeRows(row, 1)
 
     assert "sv1" not in _shared_views()
+
+
+def test_get_view_type_icon(qapp):
+    """Regression: get_view_type_icon delegated to a nonexistent
+    DisplayModel method, raising AttributeError."""
+    icon = SharedViewModel.get_view_type_icon(ViewType.VIEW_SHARED)
+    assert not icon.isNull()

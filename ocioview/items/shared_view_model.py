@@ -10,7 +10,8 @@ from PySide6 import QtCore, QtGui
 
 from ..config_cache import ConfigCache
 from .config_item_model import ColumnDesc, BaseConfigItemModel
-from .display_model import View, DisplayModel
+from .display_model import View
+from .view_model import ViewModel
 from .utils import ViewType
 
 
@@ -44,7 +45,7 @@ class SharedViewModel(BaseConfigItemModel):
 
     @classmethod
     def get_view_type_icon(cls, view_type: ViewType) -> QtGui.QIcon:
-        return DisplayModel.get_view_type_icon(view_type)
+        return ViewModel.get_view_type_icon(view_type)
 
     def __init__(self, parent: Optional[QtCore.QObject] = None):
         super().__init__(parent=parent)
