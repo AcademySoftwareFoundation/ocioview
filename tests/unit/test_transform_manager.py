@@ -31,3 +31,23 @@ def test_reset_clears_subscriptions():
 
     TransformManager.reset()
     assert TransformManager.get_subscription_slot(model, label) == -1
+
+
+def test_reassigning_slot_does_not_duplicate_callbacks():
+    """Regression: moving a subscription to another slot must disconnect the
+    original slot's agent. Otherwise reusing that slot leaves a stale
+    connection and its callbacks fire twice."""
+    model = ColorSpaceModel()
+    label_a = model.format_subscription_item_label("raw")
+    label_b = model.format_subscription_item_label("scene_reference")
+
+    calls = []
+    TransformManager.subscribe_to_transforms_at(0, lambda *args: calls.append(args))
+
+    TransformManager.set_subscription(0, model, label_a)
+    TransformManager.set_subscription(1, model, label_a)  # move the item off slot 0
+    TransformManager.set_subscription(0, model, label_b)  # reuse slot 0
+
+    calls.clear()
+    model._update_tf_subscribers("scene_reference")
+    assert len(calls) == 1

@@ -91,7 +91,9 @@ class TransformManager:
                 tf_subscription.item_model == item_model
                 and tf_subscription.item_label == item_label
             ):
-                tf_agent = tf_subscription.item_model.get_transform_agent(slot)
+                tf_agent = tf_subscription.item_model.get_transform_agent(
+                    other_slot
+                )
                 tf_agent.disconnect_all()
                 del cls._tf_subscriptions[other_slot]
 
