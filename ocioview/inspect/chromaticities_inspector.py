@@ -471,10 +471,15 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         Slot triggered when the image is ready.
         """
 
+        # Round the per-axis factor up: a truncating int() leaves the
+        # sub-sampled image above MAXIMUM_IMAGE_SAMPLES_COUNT whenever the
+        # linear factor is not a perfect square.
         sub_sampling_factor = int(
-            np.sqrt(
-                subsampling_factor(
-                    image_array, self.MAXIMUM_IMAGE_SAMPLES_COUNT
+            np.ceil(
+                np.sqrt(
+                    subsampling_factor(
+                        image_array, self.MAXIMUM_IMAGE_SAMPLES_COUNT
+                    )
                 )
             )
         )
