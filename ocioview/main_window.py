@@ -460,8 +460,14 @@ class OCIOView(QtWidgets.QMainWindow):
         for other_version_path in backup_dir.glob(
             self._format_version_filename()
         ):
-            if other_version_path.is_file() and other_version_path.suffixes:
-                other_version_str = other_version_path.suffixes[0].strip(".")
+            if (
+                other_version_path.is_file()
+                and len(other_version_path.suffixes) >= 2
+            ):
+                # The version is the second-to-last suffix
+                # (e.g. ``config.0001.ocio`` -> ``.0001``), which also holds
+                # when the config stem itself contains dots.
+                other_version_str = other_version_path.suffixes[-2].strip(".")
                 if other_version_str.isdigit():
                     other_version = int(other_version_str)
                     if other_version > max_version:
