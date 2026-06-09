@@ -612,7 +612,9 @@ class CurveView(QtWidgets.QGraphicsView):
             dtype=np.float32,
         )
 
-        log_min = math.log(max(self.EPSILON, self._input_min))
+        # ``np.logspace`` interprets these as exponents in ``_log_base``, so
+        # both bounds must use that base (log_min previously used natural log).
+        log_min = math.log(max(self.EPSILON, self._input_min), self._log_base)
         log_max = max(
             log_min + 0.00001, math.log(self._input_max, self._log_base)
         )
@@ -739,11 +741,15 @@ class CurveView(QtWidgets.QGraphicsView):
 
         # Transform to scale/translate curve so that it fits in a square and
         # has its origin at (0, 0).
+        # Guard against degenerate (flat) input/output ranges, which would
+        # otherwise divide by zero (e.g. a constant-output transform).
+        x_range = self._x_max - self._x_min
+        y_range = self._y_max - self._y_min
         curve_tf = QtGui.QTransform()
         curve_tf.translate(-self._x_min, -self._y_min)
         curve_tf.scale(
-            self.CURVE_SCALE / (self._x_max - self._x_min),
-            self.CURVE_SCALE / (self._y_max - self._y_min),
+            self.CURVE_SCALE / x_range if x_range else 1.0,
+            self.CURVE_SCALE / y_range if y_range else 1.0,
         )
         self._curve_tf = curve_tf
         self._curve_tf_inv, ok = curve_tf.inverted()
