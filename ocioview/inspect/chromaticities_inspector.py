@@ -377,7 +377,10 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         self._visuals["rgb_color_space_chromaticities_3d"].visible = False
         self._visuals["rgb_scatter_3d"].visible = False
 
-        self._wgpu_viewer.wgpu_scene.add(self._root)
+        # _setup_visuals runs on every reset(); only add the root once or the
+        # scene graph accumulates duplicate nodes.
+        if self._root not in self._wgpu_viewer.wgpu_scene.children:
+            self._wgpu_viewer.wgpu_scene.add(self._root)
 
         self._reset_camera()
 
