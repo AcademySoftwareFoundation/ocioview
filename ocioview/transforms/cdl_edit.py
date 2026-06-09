@@ -45,7 +45,7 @@ class CDLTransformEdit(BaseTransformEdit):
         self.tf_layout.insertRow(0, "Offset", self.offset_edit)
         self.tf_layout.insertRow(0, "Slope", self.slope_edit)
 
-    def transform(self) -> ocio.ColorSpaceTransform:
+    def transform(self) -> ocio.CDLTransform:
         transform = super().transform()
         transform.setSlope(self.slope_edit.value())
         transform.setOffset(self.offset_edit.value())

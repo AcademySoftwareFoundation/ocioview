@@ -51,7 +51,7 @@ class ExposureContrastTransformEdit(BaseTransformEdit):
         self.tf_layout.insertRow(0, "Exposure", self.exposure_edit)
         self.tf_layout.insertRow(0, "Style", self.style_combo)
 
-    def transform(self) -> ocio.ColorSpaceTransform:
+    def transform(self) -> ocio.ExposureContrastTransform:
         transform = super().transform()
         transform.setStyle(self.style_combo.member())
         transform.setExposure(self.exposure_edit.value())

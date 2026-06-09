@@ -26,7 +26,7 @@ class LogTransformEdit(BaseTransformEdit):
         # Layout
         self.tf_layout.insertRow(0, "Base", self.base_edit)
 
-    def transform(self) -> ocio.ColorSpaceTransform:
+    def transform(self) -> ocio.LogTransform:
         transform = super().transform()
         transform.setBase(self.base_edit.value())
         return transform

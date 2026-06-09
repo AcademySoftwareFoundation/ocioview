@@ -57,7 +57,7 @@ class DisplayViewTransformEdit(BaseTransformEdit):
         # Initialize
         self.update_from_config()
 
-    def transform(self) -> ocio.ColorSpaceTransform:
+    def transform(self) -> ocio.DisplayViewTransform:
         transform = super().transform()
         transform.setSrc(self.src_combo.color_space_name())
         transform.setDisplay(self.display_combo.currentText())
