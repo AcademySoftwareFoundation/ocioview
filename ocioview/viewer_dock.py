@@ -145,7 +145,8 @@ class ViewerDock(TabbedDockWidget):
         Update the current viewer to reflect the latest config changes.
         """
         viewer = self.tabs.currentWidget()
-        viewer.update()
+        if viewer is not None:
+            viewer.update()
 
     def reset(self) -> None:
         """

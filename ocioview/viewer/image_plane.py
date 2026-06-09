@@ -441,8 +441,13 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         self._ocio_tf = None
 
+        input_color_space = (
+            self._ocio_proc_context.input_color_space
+            if self._ocio_proc_context
+            else None
+        )
         self.update_ocio_proc(
-            ProcessorContext(self._ocio_proc_context.input_color_space),
+            ProcessorContext(input_color_space),
             force_update=True,
         )
 
