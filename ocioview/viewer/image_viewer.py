@@ -916,6 +916,23 @@ class ImageViewer(QtWidgets.QWidget):
             if index != -1:
                 self.tf_box.setCurrentIndex(index)
 
+    def teardown(self) -> None:
+        """
+        Disconnect all application-wide subscriptions held by this viewer.
+        Must be called before the viewer is destroyed (e.g. on tab close) so
+        the global routers do not retain callbacks into a dead widget.
+        """
+        SignalRouter.get_instance().mode_changed.disconnect(
+            self._on_mode_changed
+        )
+        TransformManager.unsubscribe_from_transform_menu(
+            self._on_transform_menu_changed
+        )
+        TransformManager.unsubscribe_from_transform_subscription_init(
+            self._on_transform_subscription_init
+        )
+        TransformManager.unsubscribe_from_all_transforms(self.set_transform)
+
     @QtCore.Slot(int)
     def _on_transform_changed(self, index: int) -> None:
         if index == 0:

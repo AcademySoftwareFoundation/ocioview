@@ -51,3 +51,24 @@ def test_reassigning_slot_does_not_duplicate_callbacks():
     calls.clear()
     model._update_tf_subscribers("scene_reference")
     assert len(calls) == 1
+
+
+def test_unsubscribe_from_menu_and_init():
+    """Menu and subscription-init subscribers can be removed (regression for
+    a viewer subscriber leak on tab close)."""
+
+    def menu_callback(menu_items):
+        pass
+
+    def init_callback(slot):
+        pass
+
+    TransformManager.subscribe_to_transform_menu(menu_callback)
+    TransformManager.subscribe_to_transform_subscription_init(init_callback)
+    assert menu_callback in TransformManager._tf_menu_subscribers
+    assert init_callback in TransformManager._tf_subscribers[-1]
+
+    TransformManager.unsubscribe_from_transform_menu(menu_callback)
+    TransformManager.unsubscribe_from_transform_subscription_init(init_callback)
+    assert menu_callback not in TransformManager._tf_menu_subscribers
+    assert init_callback not in TransformManager._tf_subscribers[-1]

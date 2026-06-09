@@ -176,6 +176,9 @@ class ViewerDock(TabbedDockWidget):
         viewer_type = type(viewer)
 
         if len(self._viewers.get(viewer_type, [])) > 1:
+            if hasattr(viewer, "teardown"):
+                viewer.teardown()
+
             self.tabs.removeTab(index)
 
             if viewer in self._viewers[viewer_type]:

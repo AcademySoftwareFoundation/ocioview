@@ -290,6 +290,29 @@ class TransformManager:
                 callbacks.remove(tf_callback)
 
     @classmethod
+    def unsubscribe_from_transform_menu(cls, menu_callback: Callable) -> None:
+        """
+        Remove a previously registered transform menu subscriber.
+
+        :param menu_callback: Previously subscribed menu callback
+        """
+        if menu_callback in cls._tf_menu_subscribers:
+            cls._tf_menu_subscribers.remove(menu_callback)
+
+    @classmethod
+    def unsubscribe_from_transform_subscription_init(
+        cls, init_callback: Callable
+    ) -> None:
+        """
+        Remove a previously registered transform subscription
+        initialization subscriber.
+
+        :param init_callback: Previously subscribed initialization callback
+        """
+        if init_callback in cls._tf_subscribers[-1]:
+            cls._tf_subscribers[-1].remove(init_callback)
+
+    @classmethod
     def reset(cls) -> None:
         """
         Drop all transform subscriptions and broadcast empty menus to
