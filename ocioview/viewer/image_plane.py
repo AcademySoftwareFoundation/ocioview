@@ -281,6 +281,9 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         self._build_program()
 
+        # Free GL resources when the context is destroyed (e.g. tab close)
+        self.context().aboutToBeDestroyed.connect(self.cleanupGL)
+
     def resizeGL(self, w: int, h: int) -> None:
         """
         Called whenever the widget is resized.
@@ -1151,6 +1154,46 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
                 )
             )
             tex_index += 1
+
+    def cleanupGL(self) -> None:
+        """
+        Delete GL resources when the context is about to be destroyed
+        (e.g. on viewer tab close), preventing GPU resource leaks.
+        """
+        if not self._gl_ready:
+            return
+
+        self.makeCurrent()
+
+        self._del_ocio_tex()
+        self._del_ocio_uniforms()
+
+        if self._image_tex is not None:
+            GL.glDeleteTextures([self._image_tex])
+            self._image_tex = None
+        if self._plane_vao is not None:
+            GL.glDeleteVertexArrays(1, [self._plane_vao])
+            self._plane_vao = None
+        plane_vbos = [
+            vbo
+            for vbo in (
+                self._plane_position_vbo,
+                self._plane_tex_coord_vbo,
+                self._plane_index_vbo,
+            )
+            if vbo is not None
+        ]
+        if plane_vbos:
+            GL.glDeleteBuffers(len(plane_vbos), plane_vbos)
+            self._plane_position_vbo = None
+            self._plane_tex_coord_vbo = None
+            self._plane_index_vbo = None
+        if self._shader_program is not None:
+            GL.glDeleteProgram(self._shader_program)
+            self._shader_program = None
+
+        self._gl_ready = False
+        self.doneCurrent()
 
     def _del_ocio_tex(self) -> None:
         """
