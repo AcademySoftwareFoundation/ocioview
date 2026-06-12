@@ -48,3 +48,12 @@ Dependencies
   * [PySide6](https://pypi.org/project/PySide6/)
   * [QtAwesome](https://pypi.org/project/QtAwesome/)
   * [imageio](https://pypi.org/project/imageio/)
+
+Running the tests
+-----------------
+
+* Full headless suite (what CI runs): ``uv run pytest -m "not slow and not gpu"``.
+  Set ``QT_QPA_PLATFORM=offscreen`` on headless machines.
+* GPU/OpenGL tests (require a real display/GPU): ``uv run pytest -m gpu`` (do not set
+  ``QT_QPA_PLATFORM``). These skip automatically when no OpenGL context is available, so
+  they are excluded from CI and meant for local runs.

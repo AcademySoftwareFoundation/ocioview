@@ -46,8 +46,9 @@ jobs:
       # The fast tiers (unit, model, golden) do not import the OpenGL/wgpu
       # viewer stack, so they run reliably headless. The slow, full-application
       # integration tests are deselected here; add a dedicated job for them once
-      # the headless GL setup is validated.
+      # the headless GL setup is validated. The gpu tier needs a real OpenGL
+      # context and is intended for local runs only, so it is deselected too.
       - name: Run fast test tiers
         env:
           QT_QPA_PLATFORM: offscreen
-        run: uv run pytest -m "not slow"
+        run: uv run pytest -m "not slow and not gpu"
