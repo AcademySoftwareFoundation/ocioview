@@ -23,7 +23,7 @@ from PySide6 import QtCore, QtGui, QtWidgets, QtOpenGLWidgets
 from ..log_handlers import message_queue
 from ..processor_context import ProcessorContext
 from ..ref_space_manager import ReferenceSpaceManager
-from .utils import load_image
+from .utils import load_image, model_view_matrix, orthographic_proj_matrix
 
 
 logger = logging.getLogger(__name__)
@@ -994,26 +994,7 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         Build orthographic projection matrix array from camera frustum
         parameters.
         """
-        right_plus_left = right + left
-        right_minus_left = right - left
-
-        top_plus_bottom = top + bottom
-        top_minus_bottom = top - bottom
-
-        far_plus_near = far + near
-        far_minus_near = far - near
-
-        tx = -right_plus_left / right_minus_left
-        ty = -top_plus_bottom / top_minus_bottom
-        tz = -far_plus_near / far_minus_near
-
-        a = 2 / right_minus_left
-        b = 2 / top_minus_bottom
-        c = -2 / far_minus_near
-
-        return np.array(
-            [[a, 0, 0, tx], [0, b, 0, ty], [0, 0, c, tz], [0, 0, 0, 1]]
-        )
+        return orthographic_proj_matrix(near, far, left, right, top, bottom)
 
     def _update_model_view_mat(self, update: bool = True) -> None:
         """
@@ -1022,23 +1003,9 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         :param bool update: Optionally redraw the window
         """
-        self._model_view_mat = np.eye(4)
-
-        # Flip Y to account for different OIIO/OpenGL image origin
-        self._model_view_mat *= [1.0, -1.0, 1.0, 1.0]
-
-        self._model_view_mat *= [
-            self._image_scale,
-            self._image_scale,
-            1.0,
-            1.0,
-        ]
-        self._model_view_mat[:2, -1] += [
-            self._image_pos[0] * self._image_scale,
-            -self._image_pos[1] * self._image_scale,
-        ]
-
-        self._model_view_mat *= self._image_size.tolist() + [1.0, 1.0]
+        self._model_view_mat = model_view_matrix(
+            self._image_scale, self._image_pos, self._image_size
+        )
 
         # Use nearest interpolation when scaling up to see pixels
         if self._image_scale > 1.0:
