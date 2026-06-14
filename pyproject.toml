@@ -48,7 +48,9 @@ docs = [
 
 [tool.uv]
 package = true
-dev-dependencies = [
+
+[dependency-groups]
+dev = [
     "black",
     "coverage",
     "coveralls",
