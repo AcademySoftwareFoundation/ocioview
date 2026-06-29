@@ -23,7 +23,7 @@ from PySide6 import QtCore, QtGui, QtWidgets, QtOpenGLWidgets
 from ..log_handlers import message_queue
 from ..processor_context import ProcessorContext
 from ..ref_space_manager import ReferenceSpaceManager
-from .utils import load_image
+from .utils import load_image, model_view_matrix, orthographic_proj_matrix
 
 
 logger = logging.getLogger(__name__)
@@ -281,6 +281,9 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         self._build_program()
 
+        # Free GL resources when the context is destroyed (e.g. tab close)
+        self.context().aboutToBeDestroyed.connect(self.cleanupGL)
+
     def resizeGL(self, w: int, h: int) -> None:
         """
         Called whenever the widget is resized.
@@ -441,8 +444,13 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         self._ocio_tf = None
 
+        input_color_space = (
+            self._ocio_proc_context.input_color_space
+            if self._ocio_proc_context
+            else None
+        )
         self.update_ocio_proc(
-            ProcessorContext(self._ocio_proc_context.input_color_space),
+            ProcessorContext(input_color_space),
             force_update=True,
         )
 
@@ -989,26 +997,7 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
         Build orthographic projection matrix array from camera frustum
         parameters.
         """
-        right_plus_left = right + left
-        right_minus_left = right - left
-
-        top_plus_bottom = top + bottom
-        top_minus_bottom = top - bottom
-
-        far_plus_near = far + near
-        far_minus_near = far - near
-
-        tx = -right_plus_left / right_minus_left
-        ty = -top_plus_bottom / top_minus_bottom
-        tz = -far_plus_near / far_minus_near
-
-        a = 2 / right_minus_left
-        b = 2 / top_minus_bottom
-        c = -2 / far_minus_near
-
-        return np.array(
-            [[a, 0, 0, tx], [0, b, 0, ty], [0, 0, c, tz], [0, 0, 0, 1]]
-        )
+        return orthographic_proj_matrix(near, far, left, right, top, bottom)
 
     def _update_model_view_mat(self, update: bool = True) -> None:
         """
@@ -1017,23 +1006,9 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
 
         :param bool update: Optionally redraw the window
         """
-        self._model_view_mat = np.eye(4)
-
-        # Flip Y to account for different OIIO/OpenGL image origin
-        self._model_view_mat *= [1.0, -1.0, 1.0, 1.0]
-
-        self._model_view_mat *= [
-            self._image_scale,
-            self._image_scale,
-            1.0,
-            1.0,
-        ]
-        self._model_view_mat[:2, -1] += [
-            self._image_pos[0] * self._image_scale,
-            -self._image_pos[1] * self._image_scale,
-        ]
-
-        self._model_view_mat *= self._image_size.tolist() + [1.0, 1.0]
+        self._model_view_mat = model_view_matrix(
+            self._image_scale, self._image_pos, self._image_size
+        )
 
         # Use nearest interpolation when scaling up to see pixels
         if self._image_scale > 1.0:
@@ -1179,6 +1154,46 @@ class ImagePlane(QtOpenGLWidgets.QOpenGLWidget):
                 )
             )
             tex_index += 1
+
+    def cleanupGL(self) -> None:
+        """
+        Delete GL resources when the context is about to be destroyed
+        (e.g. on viewer tab close), preventing GPU resource leaks.
+        """
+        if not self._gl_ready:
+            return
+
+        self.makeCurrent()
+
+        self._del_ocio_tex()
+        self._del_ocio_uniforms()
+
+        if self._image_tex is not None:
+            GL.glDeleteTextures([self._image_tex])
+            self._image_tex = None
+        if self._plane_vao is not None:
+            GL.glDeleteVertexArrays(1, [self._plane_vao])
+            self._plane_vao = None
+        plane_vbos = [
+            vbo
+            for vbo in (
+                self._plane_position_vbo,
+                self._plane_tex_coord_vbo,
+                self._plane_index_vbo,
+            )
+            if vbo is not None
+        ]
+        if plane_vbos:
+            GL.glDeleteBuffers(len(plane_vbos), plane_vbos)
+            self._plane_position_vbo = None
+            self._plane_tex_coord_vbo = None
+            self._plane_index_vbo = None
+        if self._shader_program is not None:
+            GL.glDeleteProgram(self._shader_program)
+            self._shader_program = None
+
+        self._gl_ready = False
+        self.doneCurrent()
 
     def _del_ocio_tex(self) -> None:
         """

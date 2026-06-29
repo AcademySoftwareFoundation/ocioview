@@ -36,7 +36,7 @@ class AllocationTransformEdit(BaseTransformEdit):
         # Initialize
         self._on_allocation_changed(self.allocation_combo.currentIndex())
 
-    def transform(self) -> ocio.ColorSpaceTransform:
+    def transform(self) -> ocio.AllocationTransform:
         allocation = self.allocation_combo.member()
         vars_ = self.src_range_edit.value()
         if allocation == ocio.ALLOCATION_LG2:

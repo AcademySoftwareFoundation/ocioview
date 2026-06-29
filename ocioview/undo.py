@@ -133,7 +133,7 @@ class ConfigSnapshotUndoCommand(QtGui.QUndoCommand):
         """
         prev_item_names = []
         has_item_names = False
-        new_cache_id = ConfigCache.get_cache_id()
+        new_cache_id, _ = ConfigCache.get_cache_id()
 
         if new_cache_id != cache_id:
             if self._model is not None:

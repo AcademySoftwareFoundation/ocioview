@@ -36,7 +36,7 @@ class ExponentWithLinearTransformEdit(BaseTransformEdit):
         self.tf_layout.insertRow(0, "Offset", self.offset_edit)
         self.tf_layout.insertRow(0, "Gamma", self.gamma_edit)
 
-    def transform(self) -> ocio.ColorSpaceTransform:
+    def transform(self) -> ocio.ExponentWithLinearTransform:
         transform = super().transform()
         transform.setGamma(self.gamma_edit.value())
         transform.setOffset(self.offset_edit.value())

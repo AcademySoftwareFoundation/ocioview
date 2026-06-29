@@ -17,6 +17,11 @@ class FixedFunctionTransformEdit(BaseTransformEdit):
     def __init__(self, parent: Optional[QtCore.QObject] = None):
         super().__init__(parent=parent)
 
+        # Params for the currently loaded style, preserved for styles which have
+        # no dedicated editor widget so they round-trip without loss.
+        self._loaded_style = None
+        self._loaded_params = []
+
         # Widgets
         self.style_combo = EnumComboBox(ocio.FixedFunctionStyle)
         self.style_combo.currentIndexChanged.connect(self._on_style_changed)
@@ -51,15 +56,20 @@ class FixedFunctionTransformEdit(BaseTransformEdit):
         # Initialize
         self._on_style_changed(self.style_combo.currentIndex())
 
-    def transform(self) -> ocio.ColorSpaceTransform:
+    def transform(self) -> ocio.FixedFunctionTransform:
         style = self.style_combo.member()
         param_widget = self.param_widgets.get(style)
-        params = []
         if param_widget is not None:
-            params = param_widget.value()
+            params = list(param_widget.value())
+        elif style == self._loaded_style:
+            # No dedicated editor for this style; preserve its loaded params.
+            params = list(self._loaded_params)
+        else:
+            params = []
 
-        transform = self.__tf_type__(style)
-        transform.setParams(params)
+        # Construct with params in one call. OCIO validates the param count at
+        # construction, so a style's params cannot be set after the fact.
+        transform = self.__tf_type__(style=style, params=params)
         transform.setDirection(self.direction_combo.member())
         return transform
 
@@ -67,6 +77,9 @@ class FixedFunctionTransformEdit(BaseTransformEdit):
         super().update_from_transform(transform)
 
         style = transform.getStyle()
+        self._loaded_style = style
+        self._loaded_params = list(transform.getParams())
+
         param_widget = self.param_widgets.get(style)
         if param_widget is not None:
             param_widget.set_value(transform.getParams())

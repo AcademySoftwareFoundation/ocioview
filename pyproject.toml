@@ -48,7 +48,9 @@ docs = [
 
 [tool.uv]
 package = true
-dev-dependencies = [
+
+[dependency-groups]
+dev = [
     "black",
     "coverage",
     "coveralls",
@@ -59,6 +61,7 @@ dev-dependencies = [
     "pyright",
     "pytest",
     "pytest-cov",
+    "pytest-qt>=4.5.0",
     "pytest-xdist",
     "toml",
     "twine",
@@ -95,6 +98,10 @@ reportUnusedExpression = false
 
 [tool.pytest.ini_options]
 addopts = "-n auto --dist=loadscope --durations=5"
+markers = [
+    "slow: full-application integration tests (deselect with '-m \"not slow\"')",
+    "gpu: tests requiring a real OpenGL context (run locally via 'uv run pytest -m gpu'; skipped headless/CI)",
+]
 filterwarnings = [
     "ignore::RuntimeWarning",
     "ignore::pytest.PytestCollectionWarning",

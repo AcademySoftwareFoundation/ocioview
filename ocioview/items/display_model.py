@@ -78,7 +78,7 @@ class DisplayModel(BaseConfigItemModel):
                 if view_type == ViewType.VIEW_SCENE:
                     view_ref = View(
                         view_type,
-                        name,
+                        view,
                         config.getDisplayViewColorSpaceName(name, view),
                         looks=config.getDisplayViewLooks(name, view),
                     )
@@ -87,7 +87,7 @@ class DisplayModel(BaseConfigItemModel):
                 else:  # VIEW_DISPLAY
                     view_ref = View(
                         view_type,
-                        name,
+                        view,
                         config.getDisplayViewColorSpaceName(name, view),
                         config.getDisplayViewTransformName(name, view),
                         config.getDisplayViewLooks(name, view),

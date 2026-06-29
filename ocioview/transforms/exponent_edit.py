@@ -32,7 +32,7 @@ class ExponentTransformEdit(BaseTransformEdit):
         self.tf_layout.insertRow(0, "Negative Style", self.negative_style_combo)
         self.tf_layout.insertRow(0, "Value", self.value_edit)
 
-    def transform(self) -> ocio.ColorSpaceTransform:
+    def transform(self) -> ocio.ExponentTransform:
         transform = super().transform()
         transform.setValue(self.value_edit.value())
         transform.setNegativeStyle(self.negative_style_combo.member())

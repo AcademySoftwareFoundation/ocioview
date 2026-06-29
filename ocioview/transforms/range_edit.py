@@ -82,7 +82,7 @@ class RangeTransformEdit(BaseTransformEdit):
 
         self._on_toggle_state_changed(0)
 
-    def transform(self) -> ocio.ColorSpaceTransform:
+    def transform(self) -> ocio.RangeTransform:
         transform = super().transform()
         if self.has_min_in.isChecked():
             transform.setMinInValue(self.min_in_edit.value())

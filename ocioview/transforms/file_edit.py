@@ -44,7 +44,7 @@ class FileTransformEdit(BaseTransformEdit):
         self.tf_layout.insertRow(0, "CCC ID", self.ccc_id_edit)
         self.tf_layout.insertRow(0, "Source", self.src_edit)
 
-    def transform(self) -> ocio.ColorSpaceTransform:
+    def transform(self) -> ocio.FileTransform:
         transform = super().transform()
         transform.setSrc(self.src_edit.text())
         transform.setCCCId(self.ccc_id_edit.text())
@@ -58,6 +58,9 @@ class FileTransformEdit(BaseTransformEdit):
         self.ccc_id_edit.setText(transform.getCCCId())
         self.interpolation_combo.set_member(transform.getInterpolation())
         self.cdl_style_combo.set_member(transform.getCDLStyle())
+
+        # Enable the format-specific widgets for the loaded file's extension.
+        self._on_src_changed()
 
     def _on_src_changed(self):
         """

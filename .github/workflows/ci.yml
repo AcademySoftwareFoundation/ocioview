@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright Contributors to the OpenColorIO Project.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests (fast tiers)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # PySide6's "offscreen" platform plugin still needs a handful of system
+      # libraries to load, even without a display.
+      - name: Install headless Qt system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libegl1 \
+            libgl1 \
+            libxkbcommon0 \
+            libdbus-1-3 \
+            libglib2.0-0 \
+            fontconfig
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync
+
+      # The fast tiers (unit, model, golden) do not import the OpenGL/wgpu
+      # viewer stack, so they run reliably headless. The slow, full-application
+      # integration tests are deselected here; add a dedicated job for them once
+      # the headless GL setup is validated. The gpu tier needs a real OpenGL
+      # context and is intended for local runs only, so it is deselected too.
+      - name: Run fast test tiers
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: uv run pytest -m "not slow and not gpu"

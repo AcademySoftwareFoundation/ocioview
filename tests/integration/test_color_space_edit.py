@@ -1,6 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright Contributors to the OpenColorIO Project.
 
+import pytest
+
+pytestmark = pytest.mark.slow
+
 
 def test_add_and_remove_color_space(ocio_view, ocio_config):
     color_space_count = len(ocio_config.getColorSpaces())

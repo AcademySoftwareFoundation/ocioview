@@ -14,9 +14,11 @@ from .message_router import message_queue
 # Queue handler
 queue_handler = QueueHandler(message_queue)
 
-# Route OCIO log through queue handler, but disconnect for a clean exit
+# Route OCIO log through queue handler, but disconnect for a clean exit. A no-op
+# function is registered rather than None, which SetLoggingFunction rejects with
+# "logFunction must not be null" and which aborts the interpreter on exit.
 ocio.SetLoggingFunction(message_queue.put_nowait)
-atexit.register(lambda: ocio.SetLoggingFunction(None))
+atexit.register(lambda: ocio.SetLoggingFunction(lambda *_: None))
 
 
 # stdout handler

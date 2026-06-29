@@ -145,7 +145,8 @@ class ViewerDock(TabbedDockWidget):
         Update the current viewer to reflect the latest config changes.
         """
         viewer = self.tabs.currentWidget()
-        viewer.update()
+        if viewer is not None:
+            viewer.update()
 
     def reset(self) -> None:
         """
@@ -175,6 +176,9 @@ class ViewerDock(TabbedDockWidget):
         viewer_type = type(viewer)
 
         if len(self._viewers.get(viewer_type, [])) > 1:
+            if hasattr(viewer, "teardown"):
+                viewer.teardown()
+
             self.tabs.removeTab(index)
 
             if viewer in self._viewers[viewer_type]:

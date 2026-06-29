@@ -91,7 +91,9 @@ class TransformManager:
                 tf_subscription.item_model == item_model
                 and tf_subscription.item_label == item_label
             ):
-                tf_agent = tf_subscription.item_model.get_transform_agent(slot)
+                tf_agent = tf_subscription.item_model.get_transform_agent(
+                    other_slot
+                )
                 tf_agent.disconnect_all()
                 del cls._tf_subscriptions[other_slot]
 
@@ -286,6 +288,29 @@ class TransformManager:
         for slot, callbacks in cls._tf_subscribers.items():
             if tf_callback in callbacks:
                 callbacks.remove(tf_callback)
+
+    @classmethod
+    def unsubscribe_from_transform_menu(cls, menu_callback: Callable) -> None:
+        """
+        Remove a previously registered transform menu subscriber.
+
+        :param menu_callback: Previously subscribed menu callback
+        """
+        if menu_callback in cls._tf_menu_subscribers:
+            cls._tf_menu_subscribers.remove(menu_callback)
+
+    @classmethod
+    def unsubscribe_from_transform_subscription_init(
+        cls, init_callback: Callable
+    ) -> None:
+        """
+        Remove a previously registered transform subscription
+        initialization subscriber.
+
+        :param init_callback: Previously subscribed initialization callback
+        """
+        if init_callback in cls._tf_subscribers[-1]:
+            cls._tf_subscribers[-1].remove(init_callback)
 
     @classmethod
     def reset(cls) -> None:

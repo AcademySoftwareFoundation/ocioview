@@ -460,8 +460,14 @@ class OCIOView(QtWidgets.QMainWindow):
         for other_version_path in backup_dir.glob(
             self._format_version_filename()
         ):
-            if other_version_path.is_file() and other_version_path.suffixes:
-                other_version_str = other_version_path.suffixes[0].strip(".")
+            if (
+                other_version_path.is_file()
+                and len(other_version_path.suffixes) >= 2
+            ):
+                # The version is the second-to-last suffix
+                # (e.g. ``config.0001.ocio`` -> ``.0001``), which also holds
+                # when the config stem itself contains dots.
+                other_version_str = other_version_path.suffixes[-2].strip(".")
                 if other_version_str.isdigit():
                     other_version = int(other_version_str)
                     if other_version > max_version:
@@ -549,7 +555,7 @@ class OCIOView(QtWidgets.QMainWindow):
         config_paths.insert(0, config_path)
 
         if len(config_paths) > 10:
-            config_paths = config_path[:10]
+            config_paths = config_paths[:10]
 
         settings.beginWriteArray(self.SETTING_RECENT_CONFIGS)
         for i, recent_config_path in enumerate(config_paths):
@@ -573,7 +579,7 @@ class OCIOView(QtWidgets.QMainWindow):
 
     def _update_window_title(self) -> None:
         filename = (
-            "untitiled"
+            "untitled"
             if self._config_path is None
             else self._config_path.name
         ) + ("*" if self._has_unsaved_changes() else "")

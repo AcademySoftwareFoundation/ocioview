@@ -377,7 +377,10 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         self._visuals["rgb_color_space_chromaticities_3d"].visible = False
         self._visuals["rgb_scatter_3d"].visible = False
 
-        self._wgpu_viewer.wgpu_scene.add(self._root)
+        # _setup_visuals runs on every reset(); only add the root once or the
+        # scene graph accumulates duplicate nodes.
+        if self._root not in self._wgpu_viewer.wgpu_scene.children:
+            self._wgpu_viewer.wgpu_scene.add(self._root)
 
         self._reset_camera()
 
@@ -471,10 +474,15 @@ class ChromaticitiesInspector(QtWidgets.QWidget):
         Slot triggered when the image is ready.
         """
 
+        # Round the per-axis factor up: a truncating int() leaves the
+        # sub-sampled image above MAXIMUM_IMAGE_SAMPLES_COUNT whenever the
+        # linear factor is not a perfect square.
         sub_sampling_factor = int(
-            np.sqrt(
-                subsampling_factor(
-                    image_array, self.MAXIMUM_IMAGE_SAMPLES_COUNT
+            np.ceil(
+                np.sqrt(
+                    subsampling_factor(
+                        image_array, self.MAXIMUM_IMAGE_SAMPLES_COUNT
+                    )
                 )
             )
         )

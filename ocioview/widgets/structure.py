@@ -70,9 +70,6 @@ class TabbedDockWidget(QtWidgets.QDockWidget):
     upward.
     """
 
-    # Cached tab icon paths
-    _tab_icons = {}
-
     def __init__(
         self,
         title: str,
@@ -94,6 +91,9 @@ class TabbedDockWidget(QtWidgets.QDockWidget):
         )
 
         self._prev_index = 0
+
+        # Cached tab icon paths, per dock instance (keyed by widget id()).
+        self._tab_icons = {}
 
         # Widgets
         self.tabs = QtWidgets.QTabWidget()

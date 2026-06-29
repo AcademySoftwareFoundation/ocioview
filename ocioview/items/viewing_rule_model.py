@@ -83,8 +83,6 @@ class ViewingRuleModel(BaseConfigItemModel):
     def __init__(self, parent: Optional[QtCore.QObject] = None):
         super().__init__(parent=parent)
 
-        self._rule_types = {}
-
         self._rule_type_icons = {
             ViewingRuleType.RULE_COLOR_SPACE: self.get_rule_type_icon(
                 ViewingRuleType.RULE_COLOR_SPACE
@@ -220,8 +218,6 @@ class ViewingRuleModel(BaseConfigItemModel):
         for key_name, key_value in item.custom_keys.items():
             viewing_rules.setCustomKey(index, key_name, key_value)
 
-        self._rule_types[item.name] = item.type
-
     def _remove_named_rule(
         self, viewing_rules: ocio.ViewingRules, item: ViewingRule
     ) -> None:
@@ -230,8 +226,6 @@ class ViewingRuleModel(BaseConfigItemModel):
             if viewing_rules.getName(i) == item.name:
                 viewing_rules.removeRule(i)
                 break
-
-        self._rule_types.pop(item.name, None)
 
     def _get_editable_viewing_rules(self) -> ocio.ViewingRules:
         """

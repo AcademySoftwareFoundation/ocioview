@@ -35,7 +35,7 @@ class BuiltinTransformEdit(BaseTransformEdit):
         # Layout
         self.tf_layout.insertRow(0, "Style", self.style_combo)
 
-    def transform(self) -> ocio.ColorSpaceTransform:
+    def transform(self) -> ocio.BuiltinTransform:
         transform = super().transform()
         transform.setStyle(self.style_combo.currentText())
         return transform

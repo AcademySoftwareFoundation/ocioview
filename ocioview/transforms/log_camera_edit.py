@@ -56,7 +56,7 @@ class LogCameraTransformEdit(BaseTransformEdit):
         self.tf_layout.insertRow(0, "Log Side Slope", self.log_side_slope_edit)
         self.tf_layout.insertRow(0, "Base", self.base_edit)
 
-    def transform(self) -> ocio.ColorSpaceTransform:
+    def transform(self) -> ocio.LogCameraTransform:
         transform = self.__tf_type__(self.lin_side_break_edit.value())
         transform.setBase(self.base_edit.value())
         transform.setLogSideSlopeValue(self.log_side_slope_edit.value())

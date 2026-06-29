@@ -43,7 +43,7 @@ class LogAffineTransformEdit(BaseTransformEdit):
         self.tf_layout.insertRow(0, "Log Side Offset", self.log_side_offset_edit)
         self.tf_layout.insertRow(0, "Log Side Slope", self.log_side_slope_edit)
 
-    def transform(self) -> ocio.ColorSpaceTransform:
+    def transform(self) -> ocio.LogAffineTransform:
         transform = super().transform()
         transform.setLogSideSlopeValue(self.log_side_slope_edit.value())
         transform.setLogSideOffsetValue(self.log_side_offset_edit.value())

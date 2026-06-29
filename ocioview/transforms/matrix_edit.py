@@ -113,7 +113,7 @@ class MatrixTransformEdit(BaseTransformEdit):
         self.tf_layout.insertRow(0, self.params_stack)
         self.tf_layout.insertRow(0, self.params_combo)
 
-    def transform(self) -> ocio.ColorSpaceTransform:
+    def transform(self) -> ocio.MatrixTransform:
         params_choice = self.params_combo.currentText()
 
         if params_choice == "Saturation":
