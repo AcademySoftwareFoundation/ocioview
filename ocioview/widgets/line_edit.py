@@ -2,6 +2,7 @@
 # Copyright Contributors to the OpenColorIO Project.
 
 from contextlib import contextmanager
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Optional, Sequence
 
@@ -179,6 +180,12 @@ class BaseValueEdit(LineEdit):
         self.editingFinished.connect(self._on_editing_finished)
         self.returnPressed.connect(self._on_return_pressed)
 
+        # Step debounce timer
+        self._step_timer = QtCore.QTimer(self)
+        self._step_timer.setSingleShot(True)
+        self._step_timer.setInterval(250)
+        self._step_timer.timeout.connect(self._on_step_debounce_timeout)
+
     # Common public interface
     def value(self) -> Any:
         return self.__value_type__(self.text())
@@ -244,6 +251,7 @@ class BaseValueEdit(LineEdit):
             self.setText(self.format(value))
 
     def _on_editing_finished(self) -> None:
+        self._step_timer.stop()
         self.validate()
         self.value_changed.emit(self.value())
 
@@ -251,6 +259,78 @@ class BaseValueEdit(LineEdit):
         # Select all when the user indicates they are done entering a value. This makes
         # it easy to start entering a new value when iterating on a parameter.
         self.selectAll()
+
+    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        """Handle up/down arrow keys for value stepping."""
+        if event.key() in (QtCore.Qt.Key.Key_Up, QtCore.Qt.Key.Key_Down):
+            direction = 1 if event.key() == QtCore.Qt.Key.Key_Up else -1
+            self._step(direction)
+            return
+        super().keyPressEvent(event)
+
+    def _step(self, direction: int) -> None:
+        """
+        Step the value up or down based on cursor position.
+
+        The digit at or after the cursor position determines the
+        step magnitude. Moving the cursor left increases the step
+        size, moving it right decreases it.
+
+        If the cursor is at the end of the text, a new finer
+        digit is appended (e.g. a ``.0`` for floats, or the
+        ones place for ints) and the step is taken at the new
+        finer granularity. The cursor remains on the left side
+        of the stepped digit.
+
+        :param direction: +1 for increment, -1 for decrement
+        """
+        text = self.text()
+        old_length = len(text)
+        cursor_pos = self.cursorPosition()
+        decimal_pos = text.find(".")
+
+        # Treat integer text as if a decimal point sat just past the end,
+        # so a single formula covers both int and float cases.
+        eff_decimal_pos = decimal_pos if decimal_pos >= 0 else old_length
+        if decimal_pos >= 0 and cursor_pos >= decimal_pos:
+            exponent = eff_decimal_pos - cursor_pos
+        else:
+            exponent = eff_decimal_pos - cursor_pos - 1
+
+        # Use Decimal for exact arithmetic to avoid float noise.
+        try:
+            new_value = Decimal(text) + direction * Decimal(10) ** exponent
+            new_text = format(new_value, "f")
+
+            # Validate the new text before applying it.
+            self.__value_type__(new_text.rstrip("."))
+        except (ValueError, TypeError, InvalidOperation):
+            return
+
+        with self._preserve_select_all():
+            self.setText(new_text)
+
+        # Adjust the cursor so it stays anchored to the stepped digit.
+        new_decimal_pos = new_text.find(".")
+        grew = len(new_text) > old_length
+        if new_decimal_pos >= 0:
+            if cursor_pos == new_decimal_pos:
+                # A decimal point appeared where the cursor sat, e.g.
+                # stepping "9" to "9.1" or "1" to "0.9".
+                cursor_pos = new_decimal_pos - direction
+            if cursor_pos < new_decimal_pos and grew:
+                # Integer part gained a digit (e.g. 9 -> 10, or the
+                # shift above landed left of the new "."); nudge right
+                # to stay on the same visual digit.
+                cursor_pos += 1
+
+        self.setCursorPosition(min(cursor_pos, len(new_text)))
+
+        self._step_timer.start()
+
+    def _on_step_debounce_timeout(self) -> None:
+        """Emit value_changed after debounce period."""
+        self.value_changed.emit(self.value())
 
     @contextmanager
     def _preserve_select_all(self):
@@ -263,10 +343,14 @@ class BaseValueEdit(LineEdit):
         if self.hasSelectedText() and self.selectionLength() == len(self.text()):
             select_all = True
 
+        cursor_pos = self.cursorPosition()
+
         yield
 
         if select_all:
             self.selectAll()
+        else:
+            self.setCursorPosition(cursor_pos)
 
 
 class FloatEdit(BaseValueEdit):
